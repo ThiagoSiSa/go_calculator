@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	re "regexp"
+	"strconv"
 )
 
 func main() {
 	userInput := Input()
 	token := Tokanizer(userInput)
-	fmt.Println(token)
+	result := Calculator(token)
+	fmt.Printf("O resultado é, %.f \n", result)
 }
 
 func Input() string {
@@ -35,4 +37,64 @@ func Tokanizer(token string) []string {
 	}
 
 	return arrayNumbersAndSignals
+}
+func Calculator(token []string) float64 {
+	var result float64
+	for {
+		hasDiv, indexDiv := Includes(token, "/")
+		if hasDiv {
+			numberBefore, _ := strconv.ParseFloat(token[indexDiv-1], 64)
+			numberAfter, _ := strconv.ParseFloat(token[indexDiv+1], 64)
+			result = float64(numberBefore) / float64(numberAfter)
+			resultConv := strconv.FormatFloat(result, 'g', 4, 64)
+			token = Splice(token, indexDiv-1, indexDiv+2, resultConv)
+
+		}
+		hasMult, indexMult := Includes(token, "*")
+		if hasMult {
+			numberBefore, _ := strconv.ParseFloat(token[indexMult-1], 64)
+			numberAfter, _ := strconv.ParseFloat(token[indexMult+1], 64)
+			result = float64(numberBefore) * float64(numberAfter)
+			resultConv := strconv.FormatFloat(result, 'g', 4, 64)
+			token = Splice(token, indexMult-1, indexMult+2, resultConv)
+
+		}
+
+		return Sum(token)
+	}
+
+}
+
+func Includes(array []string, symbol string) (bool, int) {
+	for i, str := range array {
+
+		if str == symbol {
+			return true, i
+		}
+	}
+	return false, 0
+}
+
+func Splice(array []string, startIndex int, finalIndex int, substitute string) []string {
+
+	var newToken []string
+	firstPartArray := array[:startIndex]
+	lastPartArray := array[finalIndex:]
+	newToken = append(newToken, firstPartArray...)
+	newToken = append(newToken, substitute)
+	newToken = append(newToken, lastPartArray...)
+
+	return newToken
+}
+
+func Sum(array []string) float64 {
+
+	var result float64
+
+	for _, str := range array {
+
+		operating, _ := strconv.ParseFloat(str, 64)
+		result = operating + result
+	}
+	return result
 }
