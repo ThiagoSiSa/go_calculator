@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	re "regexp"
+	"go_calculator/tokanizer/tokanizer"
 	"strconv"
 )
 
 func main() {
 	userInput := Input()
-	token := Tokanizer(userInput)
+	token := tokanizer.StringToArray(userInput)
 	result := Calculator(token)
 	fmt.Printf("O resultado é, %.f \n", result)
 }
@@ -18,51 +18,36 @@ func Input() string {
 	fmt.Scan(&userInput)
 	return userInput
 }
-func Tokanizer(token string) []string {
 
-	regex := re.MustCompile(`[\d]{1,}|[^\d]`)
-	numbers := re.MustCompile(`\d`)
-	arrayCharacters := regex.FindAllString(token, -1)
-	var arrayNumbersAndSignals []string
-	for i := 0; i < len(arrayCharacters); i++ {
-		str := arrayCharacters[i]
-		if str == "+" || str == "-" && numbers.Match([]byte(arrayCharacters[i+1])) {
-			strConcat := str + arrayCharacters[i+1]
-			arrayNumbersAndSignals = append(arrayNumbersAndSignals, strConcat)
-			arrayCharacters = arrayCharacters[i+2:]
-			i = -1
-		} else {
-			arrayNumbersAndSignals = append(arrayNumbersAndSignals, str)
-		}
-	}
-
-	return arrayNumbersAndSignals
-}
 func Calculator(token []string) float64 {
 	var result float64
 	for {
 		hasDiv, indexDiv := Includes(token, "/")
+		hasMult, indexMult := Includes(token, "*")
 		if hasDiv {
-			numberBefore, _ := strconv.ParseFloat(token[indexDiv-1], 64)
+			numberBefore, err := strconv.ParseFloat(token[indexDiv-1], 64)
+			if err != nil {
+				fmt.Println("Erro", err)
+				break
+			}
 			numberAfter, _ := strconv.ParseFloat(token[indexDiv+1], 64)
+
 			result = float64(numberBefore) / float64(numberAfter)
 			resultConv := strconv.FormatFloat(result, 'g', 4, 64)
 			token = Splice(token, indexDiv-1, indexDiv+2, resultConv)
 
-		}
-		hasMult, indexMult := Includes(token, "*")
-		if hasMult {
+		} else if hasMult {
 			numberBefore, _ := strconv.ParseFloat(token[indexMult-1], 64)
 			numberAfter, _ := strconv.ParseFloat(token[indexMult+1], 64)
 			result = float64(numberBefore) * float64(numberAfter)
 			resultConv := strconv.FormatFloat(result, 'g', 4, 64)
 			token = Splice(token, indexMult-1, indexMult+2, resultConv)
 
+		} else {
+			break
 		}
-
-		return Sum(token)
 	}
-
+	return Sum(token)
 }
 
 func Includes(array []string, symbol string) (bool, int) {
