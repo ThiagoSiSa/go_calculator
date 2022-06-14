@@ -1,3 +1,3 @@
-module go_calculator/tokanizer
+module go_calculator
 
 go 1.18
