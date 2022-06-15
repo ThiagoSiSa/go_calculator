@@ -7,10 +7,18 @@ import (
 	"go_calculator/research"
 	"go_calculator/splice"
 	"go_calculator/tokanizer"
+	"net/http"
 	"strconv"
+	"text/template"
 )
 
+var temp = template.Must(template.ParseGlob("templates/*.html"))
+
 func main() {
+	fs := http.FileServer(http.Dir("assets"))
+	http.Handle("/assets/", http.StripPrefix("/assets", fs))
+	http.HandleFunc("/", index)
+	http.ListenAndServe(":8000", nil)
 
 	userInput := Input()
 	token := tokanizer.StringToArray(userInput)
@@ -63,4 +71,9 @@ func Calculator(token []string) float64 {
 	}
 	sum := calc.Add(token)
 	return sum
+}
+
+func index(w http.ResponseWriter, r *http.Request) {
+	temp.ExecuteTemplate(w, "index", nil)
+
 }
